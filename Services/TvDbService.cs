@@ -1,4 +1,5 @@
 ﻿using FileRenamer.Interfaces;
+using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 
 namespace FileRenamer.Services
@@ -14,38 +15,37 @@ namespace FileRenamer.Services
             _logger = logger;
         }
 
-        public async Task<string?> GetNewNameAsync(string originalName, string fileType)
+        public async Task<string> GetNewNameAsync(string originalName, FileType fileType, string seasonAndEpisode = null)
         {
             try
             {
-                var apiUrl = $"https://api.thetvdb.com/search?name={originalName}";
-                var response = await _httpClient.GetAsync(apiUrl);
+                string apiUrl = $"https://api.thetvdb.com/search?name={originalName}";
+                if (fileType == FileType.TvShow && !string.IsNullOrEmpty(seasonAndEpisode))
+                {
+                    apiUrl += $"&seasonAndEpisode={seasonAndEpisode}";
+                }
 
+                var response = await _httpClient.GetAsync(apiUrl);
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
                     var data = JsonConvert.DeserializeObject<Root>(content);
-
-                    if (fileType == "movie")
-                    {
-                        return $"{data.Data[0].Name} ({data.Data[0].Year})";
-                    }
-                    else
-                    {
-                        // Additional logic to fetch episode names and construct the new name
-                    }
+                    // Logic to extract and construct the new name from the API response
+                    return fileType == FileType.Movie ?
+                        $"{data.Data[0].Name} ({data.Data[0].Year})" :
+                        $"{data.Data[0].Name} {seasonAndEpisode} {data.Data[0].Overview}";
                 }
                 else
                 {
                     _logger.LogError($"Failed to fetch data from the API. Status code: {response.StatusCode}");
+                    return null!;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while fetching data from the API.");
+                return null!;
             }
-
-            return null;
         }
     }
 }
