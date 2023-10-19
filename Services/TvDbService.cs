@@ -1,4 +1,5 @@
-﻿using FileRenamer.Interfaces;
+﻿using FileRenamer.Enum;
+using FileRenamer.Interfaces;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 
@@ -15,12 +16,12 @@ namespace FileRenamer.Services
             _logger = logger;
         }
 
-        public async Task<string> GetNewNameAsync(string originalName, FileType fileType, string seasonAndEpisode = null)
+        public async Task<string> GetNewNameAsync(string originalName, FileType fileType, string? seasonAndEpisode = null)
         {
             try
             {
                 string apiUrl = $"https://api.thetvdb.com/search?name={originalName}";
-                if (fileType == FileType.TvShow && !string.IsNullOrEmpty(seasonAndEpisode))
+                if (fileType == FileType.TVShow && !string.IsNullOrEmpty(seasonAndEpisode))
                 {
                     apiUrl += $"&seasonAndEpisode={seasonAndEpisode}";
                 }

@@ -1,4 +1,6 @@
-﻿using FileRenamer.Interfaces;
+﻿using FileRenamer.Enum;
+using FileRenamer.Interfaces;
+using FileRenamer.Models;
 using Microsoft.VisualBasic.FileIO;
 using System.Text.RegularExpressions;
 
@@ -27,7 +29,7 @@ namespace FileRenamer.Services
             foreach (var filePath in videoFiles)
             {
                 var fileName = Path.GetFileNameWithoutExtension(filePath);
-                var fileType = isMovie ? FileType.Movie : FileType.TvShow;
+                var fileType = isMovie ? FileType.Movie : FileType.TVShow;
                 var newName = await _tvDbService.GetNewNameAsync(fileName, fileType);
 
                 if (!string.IsNullOrEmpty(newName))
@@ -41,7 +43,15 @@ namespace FileRenamer.Services
 
         public async Task<bool> ExecuteRenamingAsync(List<ConfirmedChange> confirmedChanges)
         {
-            // ... (existing logic for renaming files)
+            try
+            {
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while executing renaming.");
+                return false;
+            }
         }
     }
 }

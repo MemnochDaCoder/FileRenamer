@@ -1,4 +1,6 @@
-﻿namespace FileRenamer.Interfaces
+﻿using FileRenamer.Models;
+
+namespace FileRenamer.Interfaces
 {
     public interface IFileRenamingService
     {

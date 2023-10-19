@@ -1,4 +1,5 @@
 using FileRenamer.Interfaces;
+using FileRenamer.Models;
 using FileRenamer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
