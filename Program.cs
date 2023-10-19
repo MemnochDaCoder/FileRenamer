@@ -1,3 +1,5 @@
+using FileRenamer.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,6 +10,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.MapPost("/proposeChanges", async (IFileRenamingService fileRenamingService, RenamingTask task) =>
+{
+    return await fileRenamingService.ProposeChangesAsync(task);
+});
+
+app.MapPost("/executeRenaming", async (IFileRenamingService fileRenamingService, List<ConfirmedChange> confirmedChanges) =>
+{
+    return await fileRenamingService.ExecuteRenamingAsync(confirmedChanges);
+});
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
