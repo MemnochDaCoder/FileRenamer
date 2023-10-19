@@ -1,6 +1,7 @@
 ﻿using FileRenamer.Enum;
 using FileRenamer.Interfaces;
 using FileRenamer.Models;
+using Microsoft.OpenApi.Services;
 using Microsoft.VisualBasic.FileIO;
 using System.Text.RegularExpressions;
 
@@ -17,31 +18,35 @@ namespace FileRenamer.Services
             _tvDbService = tvDbService;
         }
 
-        public async Task<List<ProposedChange>> ProposeChangesAsync(RenamingTask task)
+        public async Task<List<ProposedChange>> ProposeChangesAsync(string filePath)
         {
-            var proposedChanges = new List<ProposedChange>();
-            var videoFiles = Directory.GetFiles(task.SourceDirectory)
-                                     .Where(f => Regex.IsMatch(f, @"\.(mp4|mkv|avi)$"))
-                                     .ToList();
+            var fileName = Path.GetFileName(filePath);
+            var (name, seasonAndEpisode) = _fileParser.ParseFileName(fileName);
 
-            var isMovie = videoFiles.Count == 1;
-
-            foreach (var filePath in videoFiles)
-            {
-                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                var fileType = isMovie ? FileType.Movie : FileType.TVShow;
-                var newName = await _tvDbService.GetNewNameAsync(fileName, fileType);
-
-                if (!string.IsNullOrEmpty(newName))
-                {
-                    proposedChanges.Add(new ProposedChange { OriginalName = fileName, NewName = newName });
-                }
-            }
-
+            var searchResults = await _tvDbService.SearchShowsOrMoviesAsync(name);
+            // Further logic to propose changes based on the search results
             return proposedChanges;
         }
 
-        public async Task<bool> ExecuteRenamingAsync(List<ConfirmedChange> confirmedChanges)
+        public async Task<List<SearchResult>> SearchShowsOrMoviesAsync(string query)
+        {
+            // Implement the logic to call the search endpoint of the TVDB API
+            // Parse the response and return a list of SearchResult objects
+        }
+
+        public async Task<MovieDetailModel> GetMovieDetailAsync(string movieId)
+        {
+            // Implement the logic to get movie details using the movieId
+            // Parse the response and return a MovieDetail object
+        }
+
+        public async Task<EpisodeDetailModel> GetEpisodeDetailAsync(string episodeId)
+        {
+            // Implement the logic to get episode details using the episodeId
+            // Parse the response and return an EpisodeDetail object
+        }
+
+        public async Task<bool> ExecuteRenamingAsync(List<ConfirmedChangeModel> confirmedChanges)
         {
             try
             {

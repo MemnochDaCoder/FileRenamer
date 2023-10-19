@@ -1,5 +1,6 @@
 ﻿using FileRenamer.Enum;
 using FileRenamer.Interfaces;
+using FileRenamer.Models;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 

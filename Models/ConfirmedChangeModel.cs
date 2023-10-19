@@ -1,6 +1,6 @@
 ﻿namespace FileRenamer.Models
 {
-    public class ConfirmedChange
+    public class ConfirmedChangeModel
     {
         public required string DirectoryPath { get; set; }
         public required string OriginalName { get; set; }

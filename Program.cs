@@ -20,7 +20,7 @@ app.MapPost("/proposeChanges", async (IFileRenamingService fileRenamingService, 
     return await fileRenamingService.ProposeChangesAsync(task);
 });
 
-app.MapPost("/executeRenaming", async (IFileRenamingService fileRenamingService, List<ConfirmedChange> confirmedChanges) =>
+app.MapPost("/executeRenaming", async (IFileRenamingService fileRenamingService, List<ConfirmedChangeModel> confirmedChanges) =>
 {
     return await fileRenamingService.ExecuteRenamingAsync(confirmedChanges);
 });
