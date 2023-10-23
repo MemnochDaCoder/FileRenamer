@@ -1,22 +1,12 @@
 #See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+# Use an existing image as a base
+FROM postgres:latest
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR /src
-COPY ["FileRenamer.csproj", "."]
-RUN dotnet restore "./FileRenamer.csproj"
-COPY . .
-WORKDIR "/src/."
-RUN dotnet build "FileRenamer.csproj" -c Release -o /app/build
+# Set environment variables (optional)
+ENV POSTGRES_DB=TheTvDb
+ENV POSTGRES_USER=Memnoch
+ENV POSTGRES_PASSWORD=WTF
 
-FROM build AS publish
-RUN dotnet publish "FileRenamer.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "FileRenamer.dll"]
+# Copy initialization scripts or SQL files (optional)
+COPY ./init.sql /docker-entrypoint-initdb.d/

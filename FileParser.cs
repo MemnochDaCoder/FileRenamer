@@ -1,11 +1,14 @@
 ﻿namespace FileRenamer
 {
-    public class FileParser
+    public static class FileParser
     {
-        public (string Name, string SeasonAndEpisode) ParseFileName(string fileName)
+        public static (string name, string? seasonAndEpisode) ParseFileName(string fileName)
         {
-            // Logic to split the filename and extract the name and season/episode info
-            // Return the extracted values as a tuple
+            // Logic to parse file names and extract the necessary information.
+            var parts = fileName.Split('.');
+            var name = parts[0];
+            var seasonAndEpisode = parts.Length > 1 ? parts[1] : null;
+            return (name, seasonAndEpisode);
         }
     }
 }

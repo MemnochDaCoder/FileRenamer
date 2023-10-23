@@ -1,10 +1,12 @@
-﻿using FileRenamer.Enum;
-using Microsoft.VisualBasic.FileIO;
+﻿using FileRenamer.Models;
 
 namespace FileRenamer.Interfaces
 {
     public interface ITvDbService
     {
-        Task<string> GetNewNameAsync(string originalName, FileType fileType, string? seasonAndEpisode = null);
+        Task<string> GetToken();
+        Task<TvDbResponse> SearchShowsOrMoviesAsync(string query);
+        Task<Root> GetEpisodeDetailsAsync(int id, string season, string episode);
+        Task<MovieDetailModel> GetMovieDetailsAsync(int id);
     }
 }

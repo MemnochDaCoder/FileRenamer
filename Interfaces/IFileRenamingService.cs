@@ -4,7 +4,7 @@ namespace FileRenamer.Interfaces
 {
     public interface IFileRenamingService
     {
-        Task<List<ProposedChange>> ProposeChangesAsync(RenamingTask task);
-        Task<bool> ExecuteRenamingAsync(List<ConfirmedChangeModel> confirmedChanges);
+        Task<List<ProposedChangeModel>> ProposeChangesAsync(RenamingTask task);
+        bool ExecuteRenamingAsync(List<ConfirmedChangeModel> confirmedChanges);
     }
 }

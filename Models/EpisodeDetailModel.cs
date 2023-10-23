@@ -1,10 +1,27 @@
-﻿namespace FileRenamer.Models
+﻿#pragma warning disable CS8618
+namespace FileRenamer.Models
 {
-    public class EpisodeDetailModel
+    public class Series
     {
-        public string? Id { get; set; }
-        public string? Name { get; set; }
-        public int Season { get; set; }
-        public int Episode { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Image { get; set; }
+    }
+
+    public class Episode
+    {
+        public int Id { get; set; }
+        public int SeriesId { get; set; }
+        public string Name { get; set; }
+        public string Aired { get; set; }
+        public string Image { get; set; }
+        public int Number { get; set; }
+        public int SeasonNumber { get; set; }
+    }
+
+    public class Data
+    {
+        public Series Series { get; set; }
+        public List<Episode> Episodes { get; set; }
     }
 }

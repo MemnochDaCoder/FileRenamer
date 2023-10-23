@@ -4,10 +4,8 @@ using FileRenamer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<ITvDbService, TvDbService>();
@@ -20,10 +18,10 @@ app.MapPost("/proposeChanges", async (IFileRenamingService fileRenamingService, 
     return await fileRenamingService.ProposeChangesAsync(task);
 });
 
-app.MapPost("/executeRenaming", async (IFileRenamingService fileRenamingService, List<ConfirmedChangeModel> confirmedChanges) =>
-{
-    return await fileRenamingService.ExecuteRenamingAsync(confirmedChanges);
-});
+//app.MapPost("/executeRenaming", async (IFileRenamingService fileRenamingService, List<ConfirmedChangeModel> confirmedChanges) =>
+//{
+//    return await fileRenamingService.ExecuteRenamingAsync(confirmedChanges);
+//});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
