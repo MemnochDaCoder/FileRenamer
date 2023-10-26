@@ -48,9 +48,9 @@ namespace FileRenamer.Services
 
                             proposedChanges.Add(new ProposedChangeModel
                             {
-                                OriginalFilePath = file,
+                                OriginalFilePath = task.SourceDirectory,
                                 OriginalFileName = fileName,
-                                ProposedFileName = $"{movieDetail.Name} ({movieDetail.Year})",
+                                ProposedFileName = $"{SanitizeFileName(movieDetail.Name!)} ({movieDetail.Year})",
                                 FileType = deconstructedFileName[deconstructedFileName.Length - 1]
                             });
                         }
@@ -61,6 +61,13 @@ namespace FileRenamer.Services
 
                             var pattern = @"S(\d{2})E(\d{2})";
                             Match match = Regex.Match(deconstructedFileName[1], pattern);
+
+                            string? filePath = null;
+
+                            foreach(var d in deconstructedFileName.Select((value, i) => new { i, value}))
+                            {
+                                filePath += d.i != deconstructedFileName.Length ? d.value : "";
+                            }
 
                             if (match.Success)
                             {
@@ -73,9 +80,9 @@ namespace FileRenamer.Services
 
                                 proposedChanges.Add(new ProposedChangeModel
                                 {
-                                    OriginalFilePath = file,
+                                    OriginalFilePath = task.SourceDirectory,
                                     OriginalFileName = fileName,
-                                    ProposedFileName = $"{episodeDetail.Data.Series.Name} {ss + episodeDetail.Data.Episodes[0].SeasonNumber}{ee + episodeDetail.Data.Episodes[0].Number} {episodeDetail.Data.Episodes[0].Name}",
+                                    ProposedFileName = SanitizeFileName($"{episodeDetail.Data.Series.Name} {ss + episodeDetail.Data.Episodes[0].SeasonNumber}{ee + episodeDetail.Data.Episodes[0].Number} {episodeDetail.Data.Episodes[0].Name}"),
                                     FileType = deconstructedFileName[deconstructedFileName.Length - 1],
                                     Season = season.ToString(),
                                     Episode = episode.ToString()
@@ -103,8 +110,8 @@ namespace FileRenamer.Services
                 {
                     if (allowedExtensions.Contains(Path.GetExtension(change.OriginalFileName))) // Checking file extension before renaming
                     {
-                        var oldPath = Path.Combine(change.OriginalFilePath, change.OriginalFileName);
-                        var newPath = Path.Combine(change.NewFilePath, change.NewFileName);
+                        var oldPath = change.OriginalFilePath;
+                        var newPath = Path.Combine(change.NewFilePath, change.NewFileName + Path.GetExtension(change.OriginalFileName));
 
                         if (File.Exists(newPath))
                         {
@@ -112,7 +119,7 @@ namespace FileRenamer.Services
                             continue;
                         }
 
-                        File.Move(oldPath, newPath);
+                        File.Move(oldPath + '\\' + change.OriginalFileName, newPath);
                     }
                 }
 
@@ -121,8 +128,21 @@ namespace FileRenamer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while executing renaming.");
+                Console.WriteLine(ex.ToString());
                 return false;
             }
+        }
+
+        private static string SanitizeFileName(string fileName)
+        {
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+
+            foreach(char c in invalidChars)
+            {
+                fileName = fileName.Replace(c, '\0');
+            }
+
+            return fileName;
         }
     }
 }
