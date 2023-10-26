@@ -1,6 +1,5 @@
 ﻿using FileRenamer.Interfaces;
 using FileRenamer.Models;
-using System.Reflection.Metadata.Ecma335;
 using System.Text.RegularExpressions;
 
 namespace FileRenamer.Services
@@ -63,7 +62,7 @@ namespace FileRenamer.Services
                             var pattern = @"S(\d{2})E(\d{2})";
                             Match match = Regex.Match(deconstructedFileName[1], pattern);
 
-                            if(match.Success)
+                            if (match.Success)
                             {
                                 var season = int.Parse(match.Groups[1].Value);
                                 var episode = int.Parse(match.Groups[2].Value);
@@ -81,7 +80,7 @@ namespace FileRenamer.Services
                                     Season = season.ToString(),
                                     Episode = episode.ToString()
                                 });
-                            }                            
+                            }
                         }
                     }
                 }
@@ -92,8 +91,6 @@ namespace FileRenamer.Services
                 _logger.LogError(ex, "Error proposing changes.");
                 return proposedChanges;
             }
-
-            return proposedChanges;
         }
 
         public bool ExecuteRenamingAsync(List<ConfirmedChangeModel> confirmedChanges)
