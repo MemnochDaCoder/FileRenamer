@@ -4,6 +4,6 @@ namespace FileRenamer.Models
     public class Root
     {
         public string Status { get; set; }
-        public Data Data { get; set; }
+        public SeriesDetailData Data { get; set; }
     }
 }

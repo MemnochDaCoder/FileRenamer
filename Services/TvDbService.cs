@@ -83,7 +83,7 @@ namespace FileRenamer.Services
             if (token == null)
                 await GetToken();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await _httpClient.GetAsync($"https://api.thetvdb.com/movies/{id}");
+            var response = await _httpClient.GetAsync($"https://api4.thetvdb.com/v4/movies/{id}");
             var content = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<MovieDetailModel>(content) ?? throw new ArgumentNullException("The search result returned no data for movies.");
         }

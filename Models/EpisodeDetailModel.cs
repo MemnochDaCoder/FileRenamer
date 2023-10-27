@@ -19,7 +19,7 @@ namespace FileRenamer.Models
         public int SeasonNumber { get; set; }
     }
 
-    public class Data
+    public class SeriesDetailData
     {
         public Series Series { get; set; }
         public List<Episode> Episodes { get; set; }

@@ -29,8 +29,10 @@ namespace FileRenamer.Services
                 foreach (var file in files)
                 {
                     var fileName = Path.GetFileName(file);
+                    var formattedFileName = FormatMovieFileName(fileName);
                     var deconstructedFileName = fileName.Split('.');
-                    var apiData = await _tvDbService.SearchShowsOrMoviesAsync(deconstructedFileName[0]);
+
+                    var apiData = await _tvDbService.SearchShowsOrMoviesAsync(formattedFileName);
 
                     if (apiData != null)
                     {
@@ -50,7 +52,7 @@ namespace FileRenamer.Services
                             {
                                 OriginalFilePath = task.SourceDirectory,
                                 OriginalFileName = fileName,
-                                ProposedFileName = $"{SanitizeFileName(movieDetail.Name!)} ({movieDetail.Year})",
+                                ProposedFileName = $"{SanitizeFileName($"{movieDetail?.Data?.Name} ({movieDetail?.Data?.Year})")}",
                                 FileType = deconstructedFileName[deconstructedFileName.Length - 1]
                             });
                         }
@@ -110,16 +112,17 @@ namespace FileRenamer.Services
                 {
                     if (allowedExtensions.Contains(Path.GetExtension(change.OriginalFileName))) // Checking file extension before renaming
                     {
-                        var oldPath = change.OriginalFilePath;
-                        var newPath = Path.Combine(change.NewFilePath, change.NewFileName + Path.GetExtension(change.OriginalFileName));
+                        var oldPath = Path.Combine(change.OriginalFilePath, change.OriginalFileName);
+                        var sanitizedNewFileName = SanitizeFileName(change.NewFileName); // Sanitizing the new filename
+                        var newPath = Path.Combine(change.NewFilePath, sanitizedNewFileName + Path.GetExtension(change.OriginalFileName));
 
                         if (File.Exists(newPath))
                         {
-                            _logger.LogWarning($"File with the name {change.NewFileName} already exists. Skipping renaming of {change.OriginalFileName}.");
+                            _logger.LogWarning($"File with the name {sanitizedNewFileName} already exists. Skipping renaming of {change.OriginalFileName}.");
                             continue;
                         }
 
-                        File.Move(oldPath + '\\' + change.OriginalFileName, newPath);
+                        File.Move(oldPath, newPath);
                     }
                 }
 
@@ -136,13 +139,38 @@ namespace FileRenamer.Services
         private static string SanitizeFileName(string fileName)
         {
             char[] invalidChars = Path.GetInvalidFileNameChars();
+            string invalidCharsRemoved = new string(fileName.Where(ch => !invalidChars.Contains(ch)).ToArray());
 
-            foreach(char c in invalidChars)
+            // You might also want to trim whitespace, if necessary
+            return invalidCharsRemoved.Trim();
+        }
+
+        private static string FormatMovieFileName(string fileName)
+        {
+            var parts = fileName.Split('.');
+
+            // Finding the index of the part that is a year (assuming the year is between 1900 and 2099)
+            int yearIndex = -1;
+            for (int i = 0; i < parts.Length; i++)
             {
-                fileName = fileName.Replace(c, '\0');
+                if (Regex.IsMatch(parts[i], @"^(19|20)\d{2}$"))
+                {
+                    yearIndex = i - 1;
+                    break;
+                }
             }
 
-            return fileName;
+            // If a year was found, keep only the parts before the year and the year itself
+            if (yearIndex != -1)
+            {
+                parts = parts.Take(yearIndex + 1).ToArray();
+            }
+
+            // Replacing dots with spaces and joining the parts back together
+            var formattedFileName = string.Join(" ", parts);
+
+            return formattedFileName;
         }
+
     }
 }
