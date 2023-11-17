@@ -30,67 +30,93 @@ namespace FileRenamer.Services
                 {
                     var fileName = Path.GetFileName(file);
                     var formattedFileName = FormatMovieFileName(fileName);
-                    var deconstructedFileName = fileName.Split('.');
 
-                    var apiData = await _tvDbService.SearchShowsOrMoviesAsync(formattedFileName);
-
-                    if (apiData != null)
+                    if (formattedFileName != null)
                     {
-                        if (files.Count == 0)
+
+                        var deconstructedFileName = formattedFileName.Split(' ');
+
+                        if (deconstructedFileName.Length == 2)
                         {
-                            _logger.LogError("No files were found in the source directory.");
-                            throw new ArgumentException("No files were found in the source directory.");
+                            formattedFileName = deconstructedFileName[0];
                         }
-                        else if (files.Count == 1)
+
+                        var apiData = await _tvDbService.SearchShowsOrMoviesAsync(formattedFileName);
+
+                        if (apiData != null)
                         {
-                            //Movies
-                            _logger.LogInformation("Started renaming a movie.");
-
-                            var movieDetail = await _tvDbService.GetMovieDetailsAsync(int.Parse(apiData.Data[0].Id));
-
-                            proposedChanges.Add(new ProposedChangeModel
+                            if (files.Count == 0)
                             {
-                                OriginalFilePath = task.SourceDirectory,
-                                OriginalFileName = fileName,
-                                ProposedFileName = $"{SanitizeFileName($"{movieDetail?.Data?.Name} ({movieDetail?.Data?.Year})")}",
-                                FileType = deconstructedFileName[deconstructedFileName.Length - 1]
-                            });
-                        }
-                        else
-                        {
-                            //Shows
-                            _logger.LogInformation("Started renaming episode.");
-
-                            var pattern = @"S(\d{2})E(\d{2})";
-                            Match match = Regex.Match(deconstructedFileName[1], pattern);
-
-                            string? filePath = null;
-
-                            foreach(var d in deconstructedFileName.Select((value, i) => new { i, value}))
-                            {
-                                filePath += d.i != deconstructedFileName.Length ? d.value : "";
+                                _logger.LogError("No files were found in the source directory.");
+                                throw new ArgumentException("No files were found in the source directory.");
                             }
-
-                            if (match.Success)
+                            else if (files.Count == 1)
                             {
-                                var season = int.Parse(match.Groups[1].Value);
-                                var episode = int.Parse(match.Groups[2].Value);
-                                var episodeDetail = await _tvDbService.GetEpisodeDetailsAsync(int.Parse(apiData.Data[0].Id), season.ToString(), episode.ToString());
-                                var ss = episodeDetail.Data.Episodes[0].SeasonNumber.ToString().Length == 1 ? "S0" : "S";
-                                var ee = episodeDetail.Data.Episodes[0].Number.ToString().Length == 1 ? "E0" : "E";
-                                var test = $"{episodeDetail.Data.Series.Name} {ss}{episodeDetail.Data.Episodes[0].SeasonNumber}{ee}{episodeDetail.Data.Episodes[0].Number} {episodeDetail.Data.Episodes[0].Name}";
+                                //Movies
+                                _logger.LogInformation("Started renaming a movie.");
+
+                                var movieDetail = await _tvDbService.GetMovieDetailsAsync(int.Parse(apiData.Data[0].Id));
 
                                 proposedChanges.Add(new ProposedChangeModel
                                 {
                                     OriginalFilePath = task.SourceDirectory,
                                     OriginalFileName = fileName,
-                                    ProposedFileName = SanitizeFileName($"{episodeDetail.Data.Series.Name} {ss + episodeDetail.Data.Episodes[0].SeasonNumber}{ee + episodeDetail.Data.Episodes[0].Number} {episodeDetail.Data.Episodes[0].Name}"),
-                                    FileType = deconstructedFileName[deconstructedFileName.Length - 1],
-                                    Season = season.ToString(),
-                                    Episode = episode.ToString()
+                                    ProposedFileName = $"{SanitizeFileName($"{movieDetail?.Data?.Name} ({movieDetail?.Data?.Year})")}",
+                                    FileType = deconstructedFileName[deconstructedFileName.Length - 1]
                                 });
                             }
+                            else
+                            {
+                                //Shows
+                                _logger.LogInformation("Started renaming episode.");
+
+                                var pattern = @"S(\d{2})E(\d{2}) | (\d{1})x(\d{2})";
+                                Match match = Regex.Match(deconstructedFileName[1], pattern);
+
+                                string? filePath = null;
+
+                                foreach (var d in deconstructedFileName.Select((value, i) => new { i, value }))
+                                {
+                                    filePath += d.i != deconstructedFileName.Length ? $" {d.value}" : "";
+                                }
+
+                                if (match.Success)
+                                {
+                                    var season = int.Parse(match.Groups[1].Value);
+                                    var episode = int.Parse(match.Groups[2].Value);
+                                    var episodeDetail = await _tvDbService.GetEpisodeDetailsAsync(int.Parse(apiData.Data[0].Id), season.ToString(), episode.ToString());
+                                    var ss = episodeDetail.Data.Episodes[0].SeasonNumber.ToString().Length == 1 ? "S0" : "S";
+                                    var ee = episodeDetail.Data.Episodes[0].Number.ToString().Length == 1 ? "E0" : "E";
+                                    var test = $"{episodeDetail.Data.Series.Name} {ss}{episodeDetail.Data.Episodes[0].SeasonNumber}{ee}{episodeDetail.Data.Episodes[0].Number} {episodeDetail.Data.Episodes[0].Name}";
+
+                                    proposedChanges.Add(new ProposedChangeModel
+                                    {
+                                        OriginalFilePath = task.SourceDirectory,
+                                        OriginalFileName = fileName,
+                                        ProposedFileName = SanitizeFileName($"{episodeDetail.Data.Series.Name} {ss + episodeDetail.Data.Episodes[0].SeasonNumber}{ee + episodeDetail.Data.Episodes[0].Number} {episodeDetail.Data.Episodes[0].Name}"),
+                                        FileType = deconstructedFileName[deconstructedFileName.Length - 1],
+                                        Season = season.ToString(),
+                                        Episode = episode.ToString()
+                                    });
+                                }
+                            }
                         }
+                    }
+                    else
+                    {
+                        var deconstructedFileName = fileName.Split(' ');
+                        var se = deconstructedFileName[5].Split("x");
+                        var name = FormatCustomAddams(fileName, se[0], se[1]);
+                        //The Addams Family (1964) — 1x01 — The Addams Family Goes to School
+                        proposedChanges.Add(new ProposedChangeModel
+                        {
+                            OriginalFilePath = task.SourceDirectory,
+                            OriginalFileName = fileName,
+                            ProposedFileName = name,
+                            FileType = deconstructedFileName[deconstructedFileName.Length - 1],
+                            Season = se[0],
+                            Episode = se[1]
+                        });
                     }
                 }
                 return proposedChanges;
@@ -147,6 +173,10 @@ namespace FileRenamer.Services
 
         private static string FormatMovieFileName(string fileName)
         {
+            if (fileName.Contains("The Addams Family"))
+            {
+                return null!;
+            }
             var parts = fileName.Split('.');
 
             // Finding the index of the part that is a year (assuming the year is between 1900 and 2099)
@@ -167,10 +197,28 @@ namespace FileRenamer.Services
             }
 
             // Replacing dots with spaces and joining the parts back together
-            var formattedFileName = string.Join(" ", parts);
+            if (parts.Length != 2)
+            {
+                return string.Join(" ", parts);
+            }
+            else
+            {
+                return parts[0];
+                //var title = parts[0].Split();
+                //return $"{title[0]} {title[1]}";
+            }
 
-            return formattedFileName;
         }
 
+        private static string FormatCustomAddams(string fileName, string season, string episode)
+        {
+            var parts = fileName.Split(' ');
+            var episodeName = "";
+            for (int i = 7; i < parts.Length; i++)
+            {
+                episodeName += $" {parts[i]}";
+            }
+            return $"{parts[0]} {parts[1]} {parts[2]} S0{season}E{episode} {episodeName}";
+        }
     }
 }

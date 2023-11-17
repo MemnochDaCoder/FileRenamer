@@ -45,6 +45,7 @@ namespace FileRenamer.Services
         public async Task<TvDbResponse> SearchShowsOrMoviesAsync(string query)
         {
             _logger.LogInformation($"Started a search: {query}");
+
             if (token == null)
             {
                 try
